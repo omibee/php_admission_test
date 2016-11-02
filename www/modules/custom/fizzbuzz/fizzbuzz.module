@@ -1,0 +1,30 @@
+<?php
+/**
+ * @file
+ * FizzBuzz module.
+ */
+
+/**
+ * Theme hook for FizzBuzz module.
+ *
+ * @var mixed $existing
+ *   Check drupal doc.
+ * @var mixed $type
+ *   Check drupal doc.
+ * @var mixed $theme
+ *   Check drupal doc.
+ * @var mixed $path
+ *   Check drupal doc.
+ *
+ * @return array
+ *   Theme from module.
+ */
+function fizzbuzz_theme($existing, $type, $theme, $path) {
+  return [
+    'fizzbuzz' => [
+      'variables' => [
+        'numbers' => NULL,
+      ],
+    ],
+  ];
+}

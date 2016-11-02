@@ -1,0 +1,142 @@
+---
+
+# This playbook runs with vagrant provision.
+# Set basic webserver setup
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  vars:
+    http_port: 80
+    domain: php-admission-test.dev
+    mysql_database_name: development
+    mysql_root_password: omibee
+    phpmyadmin_mysql_host: localhost
+    phpmyadmin_mysql_port: ""
+    phpmyadmin_mysql_socket: ""
+    phpmyadmin_mysql_connect_type: tcp
+    phpmyadmin_mysql_user: root
+    phpmyadmin_mysql_password: "{{ mysql_root_password }}"
+  tasks:
+    - name: Install packages
+      apt: name={{ item }} update_cache=yes state=latest
+      with_items:
+        - ntp
+        - apache2
+        - python-mysqldb
+        - mysql-server
+        - php5-mysql
+        - php5
+        - libapache2-mod-php5
+        - php5-mcrypt
+        - php5-gd
+        - curl
+        - libcurl3
+        - libcurl3-dev
+        - php5-curl
+        - php5-xdebug
+        - git
+
+    - name: Enabled apache modules
+      apache2_module: name={{ item }} state=present
+      with_items:
+        - rewrite
+        - ssl
+
+    - name: Increase PHP memory limit
+      lineinfile: dest=/etc/php5/apache2/php.ini  regexp=^memory_limit line=memory_limit=196M
+
+    - name: Increase PHP memory limit
+      lineinfile: dest=/etc/php5/apache2/php.ini  regexp=^post_max_size line=post_max_size=24M
+
+    - name: Set PHP session save path
+      lineinfile: dest=/etc/php5/apache2/php.ini  regexp=^session.save_path line=session.save_path="/tmp"
+
+    - name: Enable xdebug
+      lineinfile: dest=/etc/php5/apache2/conf.d/20-xdebug.ini  line="xdebug.remote_enable=1"
+    - name: Xdebug remote autostart
+      lineinfile: dest=/etc/php5/apache2/conf.d/20-xdebug.ini  line="xdebug.remote_autostart=1"
+    - name: Set host IP as xdebug remote host
+      lineinfile: dest=/etc/php5/apache2/conf.d/20-xdebug.ini  line="xdebug.remote_host=192.168.19.1"
+    - name: Set xdebug max nesting level
+      lineinfile: dest=/etc/php5/apache2/conf.d/20-xdebug.ini line="xdebug.max_nesting_level=256"
+
+    - name: Start the MySQL service
+      become: yes
+      become_method: sudo
+      service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Update mysql root password for all root accounts
+      become: yes
+      become_method: sudo
+      mysql_user:
+        name: root
+        host: "{{ item }}"
+        password: "{{ mysql_root_password }}"
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        check_implicit_admin: yes
+        priv: "*.*:ALL,GRANT"
+      with_items:
+        - 127.0.0.1
+        - ::1
+        - localhost
+    - name: copy .my.cnf file with root password credentials
+      template: src=./config/.my.cnf dest=/root/.my.cnf owner=root mode=0600
+
+    - name: Create database
+      mysql_db: db={{ mysql_database_name }} state=present
+
+    - name: Create virtual host file
+      template: src=./config/virtualhost.conf dest=/etc/apache2/sites-available/{{ domain }}.conf
+
+    - name: Set PHP Error logging for a development box
+      lineinfile: dest=/etc/php5/apache2/php.ini regexp=^error_reporting line='error_reporting = E_ALL'
+
+    - name: Display PHP errors
+      lineinfile: dest=/etc/php5/apache2/php.ini regexp=^display_errors line='display_errors = On'
+
+    - name: a2dissite 000-default
+      command: a2dissite 000-default
+      notify:
+        - restart apache2
+
+    - name: a2ensite {{ domain }}
+      command: a2ensite {{ domain }}
+      args:
+        creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+      notify:
+        - restart apache2
+
+    - name: Link project folder
+      file: src=/vagrant/www dest=/var/www/{{ domain }} state=link
+
+    - name: Download PHP composer
+      get_url: url=https://getcomposer.org/installer dest=/tmp
+
+    - name: Install PHP composer
+      command: php /tmp/installer --install-dir=/usr/local/bin --filename=composer
+      args:
+        creates: /usr/local/bin/composer
+
+    - name: Install drupal dependencies
+      composer: command=install working-dir=/vagrant/www
+
+    - name: Download drush
+      get_url: url=http://files.drush.org/drush.phar dest=/usr/local/bin/drush mode=0775
+
+    - name: Import database
+      mysql_db: name={{ mysql_database_name }} state=import target=/vagrant/database/development.sql
+
+    - name: Update packages
+      apt: upgrade=dist
+
+
+  handlers:
+    - name: restart ntp
+      service: name=ntp state=restarted
+    - name: restart apache2
+      service: name=apache2 state=restarted

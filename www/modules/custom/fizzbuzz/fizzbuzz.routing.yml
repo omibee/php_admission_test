@@ -1,0 +1,7 @@
+fizzbuzz.content:
+  path: '/fizzbuzz'
+  defaults:
+    _controller: '\Drupal\fizzbuzz\Controller\FizzBuzzController::content'
+    _title: 'FizzBuzz'
+  requirements:
+    _permission: 'access content'
