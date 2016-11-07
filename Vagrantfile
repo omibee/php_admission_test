@@ -3,15 +3,6 @@
 
 required_plugins = {"vagrant-hostmanager" => "1.8.1" }
 
-required_plugins.each_pair do |plugin, version|
-  need_restart = false
-  unless Vagrant.has_plugin?(plugin, version)
-    system "vagrant plugin install #{plugin}"
-    need_restart = true
-  end
-  exec "vagrant #{ARGV.join(' ')}" if need_restart
-end
-
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 
