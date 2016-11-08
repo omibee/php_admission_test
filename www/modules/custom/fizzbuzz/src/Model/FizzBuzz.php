@@ -32,8 +32,21 @@ class FizzBuzz {
    *   FizzBuzz number (or string) to show.
    */
   protected static function parseFizzBuzzNumber($number) {
-    // TODO: Make this work.
-    return $number;
+	  $fizz= "";
+	  
+	  if($number%3==0)
+	  {
+		  $fizz.= "Fizz";
+	  }
+	  if($number %5==0)
+	  {
+		  $fizz.= "Buzz";
+	  }
+	  if(!$fizz)
+	  {
+		  return $number; 
+	  }
+    return $fizz;
   }
 
   /**
