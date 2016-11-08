@@ -32,7 +32,11 @@ class FizzBuzz {
    *   FizzBuzz number (or string) to show.
    */
   protected static function parseFizzBuzzNumber($number) {
-    // TODO: Make this work.
+
+      if ($number % 15 == 0) return 'FizzBuzz';
+      if ($number % 3 == 0) return 'Fizz';
+      if ($number % 5 == 0) return 'Buzz';
+
     return $number;
   }
 
