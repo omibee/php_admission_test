@@ -21,6 +21,19 @@ class FizzBuzzController extends ControllerBase {
    *   rendering info.
    */
   public function content() {
+    
+    // $numbers = FizzBuzz::generate();
+
+    // 	if(($i % 3) == 0 && ($i % 5) == 0){
+    // 		echo 'FizzBuzz';
+    // 	} else if(($i % 5) == 0){
+    // 		echo 'Buzz';
+    // 	} else if(($i % 3) == 0){
+    // 		echo 'Fizz';
+    // 	} else {
+    // 	  echo $i.'<br>';
+    // 	}
+
     return [
       '#theme'   => 'fizzbuzz',
       '#numbers' => FizzBuzz::generate(),

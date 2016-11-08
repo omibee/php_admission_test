@@ -33,6 +33,17 @@ class FizzBuzz {
    */
   protected static function parseFizzBuzzNumber($number) {
     // TODO: Make this work.
+    
+    	if(($number % 3) == 0 && ($number % 5) == 0){
+    		$number = 'FizzBuzz';
+    	} else if(($number % 5) == 0){
+    		$number = 'Buzz';
+    	} else if(($number % 3) == 0){
+    		$number = 'Fizz';
+    	} else {
+    	  $number = $number;
+    	}
+    
     return $number;
   }
 
